@@ -1,0 +1,28 @@
+name: Build L_R
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Package
+        run: |
+          P=$(find build -name "L_R.vst3" -type d | head -1)
+          codesign --force --deep -s - "$P"
+          mkdir out
+          ditto -c -k --keepParent "$P" out/L_R.vst3.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: L_R-mac-vst3
+          path: out/L_R.vst3.zip
